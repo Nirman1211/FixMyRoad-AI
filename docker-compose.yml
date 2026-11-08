@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: fixmyroad_postgis
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fixmyroad_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fixmyroad_secure_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-fixmyroad_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fixmyroad_user} -d ${POSTGRES_DB:-fixmyroad_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fixmyroad_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://fixmyroad_user:fixmyroad_secure_password_2026@db:5432/fixmyroad_db
+      - SECRET_KEY=${SECRET_KEY:-fixmyroad-super-secret-jwt-key-production-ready}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+      - ROBOFLOW_API_KEY=${ROBOFLOW_API_KEY:-}
+      - USE_LOCAL_YOLO=true
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/models:/app/models
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fixmyroad_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+

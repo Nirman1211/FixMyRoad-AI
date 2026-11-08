@@ -1,0 +1,47 @@
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python / Backend
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+backend/*/*/*/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+venv/
+ENV/
+env/
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & uploads (keep directory structures clean)
+backend/fixmyroad.db
+backend/test_fixmyroad.db
+*.db
+backend/uploads/original/*
+backend/uploads/annotated/*
+!backend/uploads/original/.gitkeep
+!backend/uploads/annotated/.gitkeep
+
+# Environment variables (Never commit secret keys to GitHub)
+backend/.env
+.env
+.env.local
+
+# OS / Editor specific
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
