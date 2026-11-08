@@ -11,7 +11,10 @@ import {
 } from '../types';
 
 // Dynamically support remote backend (e.g. Render) or local Vite proxy
-export const BACKEND_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const rawBackend = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+export const BACKEND_URL = rawBackend
+  ? (rawBackend.startsWith('http://') || rawBackend.startsWith('https://') ? rawBackend : `https://${rawBackend}`)
+  : '';
 const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api/v1` : '/api/v1';
 
 export const formatImageUrl = (url?: string | null): string => {
