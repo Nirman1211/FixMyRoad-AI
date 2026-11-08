@@ -20,12 +20,15 @@ async def lifespan(app: FastAPI):
 
     # Initialize database tables and seed if not in testing mode
     if not os.environ.get("TESTING"):
-        Base.metadata.create_all(bind=engine)
-        db = SessionLocal()
         try:
-            seed_database(db)
-        finally:
-            db.close()
+            Base.metadata.create_all(bind=engine)
+            db = SessionLocal()
+            try:
+                seed_database(db)
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"Database initialization note: {e}")
 
     yield
     # Shutdown logic if needed
