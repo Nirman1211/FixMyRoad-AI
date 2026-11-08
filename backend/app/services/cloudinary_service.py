@@ -7,11 +7,14 @@ logger = logging.getLogger(__name__)
 
 # Check if Cloudinary is configured
 def is_cloudinary_configured() -> bool:
-    return bool(
-        settings.CLOUDINARY_CLOUD_NAME 
-        and settings.CLOUDINARY_API_KEY 
-        and settings.CLOUDINARY_API_SECRET
-    )
+    name = (settings.CLOUDINARY_CLOUD_NAME or "").strip().lower()
+    key = (settings.CLOUDINARY_API_KEY or "").strip()
+    secret = (settings.CLOUDINARY_API_SECRET or "").strip()
+    if not (name and key and secret):
+        return False
+    if name in ("none", "false", "placeholder", "local", "null"):
+        return False
+    return True
 
 def init_cloudinary():
     if is_cloudinary_configured():
