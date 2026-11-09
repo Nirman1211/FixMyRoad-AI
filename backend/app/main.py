@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.core.config import settings
 from app.db.base import Base
@@ -60,19 +61,17 @@ app.add_middleware(
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
+# Mount Compiled Frontend Assets (JS/CSS for Single-URL Unified Deployment)
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+ASSETS_DIR = os.path.join(STATIC_DIR, "assets")
+INDEX_FILE = os.path.join(STATIC_DIR, "index.html")
+
+if os.path.exists(ASSETS_DIR):
+    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+
 
 # Include API v1 Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-
-@app.get("/", tags=["Health"])
-def root():
-    return {
-        "project": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "status": "online",
-        "documentation": f"{settings.API_V1_STR}/docs"
-    }
 
 
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["Health"])
@@ -81,4 +80,22 @@ def health_check():
         "status": "healthy",
         "database": "connected",
         "ai_engine": "ready"
+    }
+
+
+# Serve React Single-Page Application (SPA) on Root & Client Routes
+@app.get("/{full_path:path}", tags=["Frontend"])
+async def serve_spa(full_path: str = ""):
+    # Do not catch API or upload routes
+    if full_path.startswith("api/") or full_path.startswith("uploads/"):
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+    
+    if os.path.exists(INDEX_FILE):
+        return FileResponse(INDEX_FILE)
+    
+    return {
+        "project": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "online",
+        "documentation": f"{settings.API_V1_STR}/docs"
     }
